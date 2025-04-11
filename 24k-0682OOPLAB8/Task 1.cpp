@@ -1,105 +1,86 @@
 #include <iostream>
-#include <string>
-
 using namespace std;
 
-class Device{
-    public:
-    int deviceId;
-    string deviceName;
-    bool status;
-    string location;
-    
-    Device(int id, string name, bool status): deviceId(id), deviceName(name), status(status), location(""){}
-    
-    virtual void turnOn(){
-        status=true;
-    }
+class Complex {
+protected:
+    double img, real;
 
-    virtual void turnOff(){
-        status=false;
-    }
-
-    virtual bool getStatus(){
-        return status;
-    }
-
-    virtual void display(){
-        cout<<"Device ID: "<<deviceId<<"\tDevice Name: "<<deviceName<<"\tStatus: "<< (status ? "On" : "Off");
-        if(location!="") cout<<"\tLocation: "<<location<<endl;
-        else cout<<endl;
-    }
-
-    virtual ~Device(){}
-};
-
-class Light: public Device{
 public:
-    double brightnessLevel;
-    string colorMode;
-
-    Light(int id, string name, bool status, double level, string mode): Device(id, name, status), brightnessLevel(level), colorMode(mode){}
-
-    void display(){
-        Device::display();
-        cout<<"Brightness Level: "<<brightnessLevel<<"\tColor Mode: "<<colorMode<<endl;
+    Complex(double r = 0, double i = 0) {
+        real = r;
+        img = i;
     }
 
-};
+    Complex operator+(Complex& other) {
+        return Complex(real + other.real, img + other.img);
+    }
 
-class Thermostate: public Device{
-    public:
-    double temp;
-    bool tempStatus; 
+    Complex operator-(Complex& other) {
+        return Complex(real - other.real, img - other.img);
+    }
 
-    Thermostate(int id, string name, bool status, double temp, bool tempStatus): Device(id, name, status), temp(temp), tempStatus(tempStatus){}
+    Complex operator*(Complex& other) {
+        return Complex(real * other.real - img * other.img, real * other.img + img * other.real);
+    }
 
-    bool getStatus(){ return tempStatus;}
-};
+    Complex operator/(Complex& other) {
+        double denominator = other.real * other.real + other.img * other.img;
+        if (denominator == 0)
+            throw "Division by zero error!";
+        return Complex(
+            (real * other.real + img * other.img) / denominator,
+            (img * other.real - real * other.img) / denominator
+        );
+    }
 
-class SecurityCamera: public Device{
-public:
-    string resolution;
-    bool recordingStatus;
-    bool nightVisionEnabled;
+    friend ostream& operator<<(ostream& out, const Complex& c) {
+        out << "(" << c.real;
+        if (c.img >= 0)
+            out << "+" << c.img << "i)";
+        else
+            out << "-" << -c.img << "i)";
+        return out;
+    }
 
-    SecurityCamera(int id, string name, bool status, string resolution, bool Status, bool vision): Device(id, name, status), recordingStatus(Status), resolution(resolution), nightVisionEnabled(vision){}
+    friend double magnitude(const Complex& c);
 
-
-    void turnOn(){
-        status=true;
-        recordingStatus=true;
+private:
+    static double sqrt_manual(double value) {
+        if (value == 0.0) return 0.0;
+        double guess = value / 2.0;
+        for (int i = 0; i < 10; ++i) {
+            guess = (guess + value / guess) / 2.0;
+        }
+        return guess;
     }
 };
 
-class SmartPlug: public Device{
-public:
-    double powerConsumption;
-    int timerSetting;
+double magnitude(const Complex& c) {
+    double squareSum = c.real * c.real + c.img * c.img;
+    return Complex::sqrt_manual(squareSum);
+}
 
-    SmartPlug(int id, string name, bool status, double consumption, int setting): Device(id, name, status), powerConsumption(consumption), timerSetting(setting){}
+int main() {
+    Complex c1(3, 4);
+    Complex c2(1, -2);
 
-    void turnOff(){
-        powerConsumption=0;
-    }
-};
+    cout << "Complex Number 1: " << c1 << endl;
+    cout << "Complex Number 2: " << c2 << endl;
 
-int main(){
-    Light light(1, "Living Room Light", true, 75, "Warm White");
-    Thermostate thermostate(2, "Hall Thermostate", false, 22.5, true);
-    SecurityCamera camera(3, "Front Door Camera", true, "1080p", true, true);
-    SmartPlug plug(4, "Smart Plug", true, 150, 30);
+    Complex sum = c1 + c2;
+    cout << "Sum: " << sum << endl;
 
-    light.turnOn();
-    light.display();
-    cout << endl;
+    Complex diff = c1 - c2;
+    cout << "Difference: " << diff << endl;
 
-    thermostate.getStatus();
-    cout << endl;
+    Complex prod = c1 * c2;
+    cout << "Product: " << prod << endl;
 
-    camera.turnOn();
-    camera.getStatus();
-    cout << endl;
+    Complex quot = c1 / c2;
+    cout << "Quotient: " << quot << endl;
 
-    plug.turnOff();
+    cout << "Magnitude of Complex Number 1: " << magnitude(c1) << endl;
+    cout << "Magnitude of Complex Number 2: " << magnitude(c2) << endl;
+
+    return 0;
 }
